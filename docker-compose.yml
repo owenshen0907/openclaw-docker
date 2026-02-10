@@ -1,0 +1,61 @@
+# ============================================================
+# OpenClaw Docker Compose
+# 数据全部映射到本地 ./data 目录，容器删除不丢数据
+# ============================================================
+
+services:
+  # ---- 主服务: Gateway ----
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-alpine/openclaw}
+    container_name: openclaw-gateway
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+      - "127.0.0.1:${OPENCLAW_BRIDGE_PORT:-18790}:18790"
+    volumes:
+      # 配置、记忆、API Key 等持久化数据
+      - ${OPENCLAW_CONFIG_DIR:-./data/openclaw-config}:/home/node/.openclaw
+      # 工作区: Agent 可读写的文件目录
+      - ${OPENCLAW_WORKSPACE_DIR:-./data/workspace}:/home/node/.openclaw/workspace
+    environment:
+      - HOME=/home/node
+      - TERM=xterm-256color
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN:-}
+    command:
+      [
+        "node",
+        "dist/index.js",
+        "gateway",
+        "--bind",
+        "${OPENCLAW_GATEWAY_BIND:-lan}",
+        "--port",
+        "18789",
+      ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18789/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ---- CLI 工具: 用于管理命令 ----
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-alpine/openclaw}
+    container_name: openclaw-cli
+    profiles:
+      - cli
+    init: true
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-./data/openclaw-config}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-./data/workspace}:/home/node/.openclaw/workspace
+    environment:
+      - HOME=/home/node
+      - TERM=xterm-256color
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    entrypoint: ["node", "dist/index.js"]

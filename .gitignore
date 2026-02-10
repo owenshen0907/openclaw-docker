@@ -1,0 +1,11 @@
+# 敏感信息
+.env
+
+# 运行时数据
+data/
+
+# 备份文件
+*.tar.gz
+
+# 旧的安装脚本
+install-openclaw.sh
