@@ -1,156 +1,214 @@
-# OpenClaw Docker 一键部署
+# OpenClaw Docker Admin
 
-基于 Docker 的 OpenClaw 部署方案，数据持久化到本地，支持一键启停。
+这是一个 **管理 OpenClaw Docker 容器** 的项目。  
+定位是：管理、配置、引导，不把整套管理端再封装进容器。
 
-## 项目结构
+当前模式：
 
+- OpenClaw 运行在 Docker（`openclaw-gateway`）
+- 管理面板运行在本机进程（Node.js）
+
+---
+
+## 先回答你现在的问题
+
+### 需要先删容器和镜像吗？
+
+**不需要先删。**
+
+- 正常迁移时，保留 `openclaw-gateway` 和镜像即可
+- 只需要移除旧版 `openclaw-admin` 管理容器（如果你之前用过）
+
+本项目的 `./install.sh` 已经会自动清理旧 `openclaw-admin` 容器。
+
+如果你想手动清理：
+
+```bash
+docker rm -f openclaw-admin 2>/dev/null || true
+# 镜像不是必须删，可选清理：
+docker image prune -f
 ```
-openclaw-docker/
-├── .env                  ← 环境变量 (API Key、Token、端口等)
-├── .gitignore            ← 排除敏感信息和运行数据
-├── docker-compose.yml    ← Docker 编排配置
-├── install.sh            ← 首次安装脚本
-├── oc.sh                 ← 日常管理脚本
-└── data/                 ← 持久化数据 (容器删除不丢失)
-    ├── openclaw-config/  ← 配置、记忆、会话历史
-    └── workspace/        ← Agent 工作区文件
-```
 
-## 前置要求
+---
 
-- Docker + Docker Compose
-- 至少 2GB 内存 (推荐 4GB)
-- 10GB 可用磁盘空间
-- 至少一个 AI 供应商的 API Key (OpenAI / Anthropic / Google)
+## 项目适合谁
+
+- 想在工作电脑上稳定运行 OpenClaw
+- 希望控制环境污染和权限边界
+- 需要图形化管理（安装、启停、日志、频道配置、排障）
+
+---
+
+## Docker 版好处（工作机友好）
+
+| 维度 | 价值 |
+|---|---|
+| 环境隔离 | 不污染系统依赖，冲突更少 |
+| 可迁移 | 数据都在 `./data`，可直接备份迁移 |
+| 可回滚 | 切换镜像 tag 后可快速重建 |
+| 运维效率 | 启停、更新、日志都可脚本化 |
+| 安全性 | 默认绑定 `127.0.0.1`，不直接暴露公网 |
+
+---
+
+## 工作机 Docker + 个人机直装（推荐组合）
+
+- 工作机：本项目（稳定、可控）
+- 个人机：直装版（完整能力、深度操控）
+- API Key / Token 分开管理，降低风险
+
+---
 
 ## 快速开始
 
-### 1. 配置 .env
+### 0) 前置要求
 
-编辑 `.env` 文件，填入你的 API Key 和聊天平台 Token：
+- Docker + Docker Compose
+- Node.js 20+
+- 至少一个模型 API Key（OpenAI / Anthropic / Gemini）
+
+### 1) 准备配置
 
 ```bash
-# AI 供应商 (至少填一个)
-OPENAI_API_KEY=sk-proj-你的Key
-# ANTHROPIC_API_KEY=sk-ant-你的Key
-# GEMINI_API_KEY=你的Key
-
-# Telegram Bot
-TELEGRAM_BOT_TOKEN=你的BotToken
-
-# Slack Bot (可选)
-# SLACK_BOT_TOKEN=xoxb-你的Token
-# SLACK_APP_TOKEN=xapp-你的Token
-
-# Discord Bot (可选)
-# DISCORD_BOT_TOKEN=你的Token
+cp .env.example .env
 ```
 
-### 2. 首次安装
+编辑 `.env`（至少填一个 Key）：
+
+```bash
+OPENAI_API_KEY=your_key
+# 或 ANTHROPIC_API_KEY / GEMINI_API_KEY
+
+OPENCLAW_GATEWAY_PORT=18789
+OPENCLAW_BRIDGE_PORT=18790
+ADMIN_PORT=3000
+```
+
+### 2) 启动管理面板（本地进程）
 
 ```bash
 chmod +x install.sh oc.sh
-./install.sh
+./install.sh start
 ```
 
-脚本会自动完成：检查 Docker 环境 → 创建数据目录 → 拉取镜像 → 配置 Telegram → 启动服务。
+访问：
 
-### 3. 配对 Telegram
+- Admin UI: `http://127.0.0.1:3000/`
+- 场景手册: `http://127.0.0.1:3000/scenarios.html`
 
-安装完成后，在 Telegram 中找到你的 Bot 发一条消息。如果终端出现配对码，运行：
+如果你改过 `ADMIN_PORT`，把 `3000` 替换成对应端口。
+
+### 3) 在面板里点击「首次安装」
+
+安装完成后，建议执行：
+
+- 「状态检查」
+- 「实时日志」
+- 用「带 token」链接进入 OpenClaw 控制台
+
+---
+
+## 管理面板命令
 
 ```bash
-./oc.sh pair telegram <配对码>
+./install.sh start
+./install.sh stop
+./install.sh restart
+./install.sh status
+./install.sh uninstall
 ```
 
-### 4. 访问控制面板
+日志文件：`./.openclaw-admin.log`
 
-浏览器打开 http://127.0.0.1:18789/
+---
 
-## 日常管理
+## 卸载
 
-所有操作通过 `oc.sh` 完成：
+默认安全卸载（推荐）：移除管理面板进程 + OpenClaw 容器，**保留 `./data`**。
 
 ```bash
-./oc.sh start       # 启动
-./oc.sh stop        # 停止
-./oc.sh restart     # 重启
-./oc.sh status      # 查看运行状态 + 健康检查
-./oc.sh logs        # 实时日志 (Ctrl+C 退出)
-./oc.sh update      # 拉取最新镜像并重建容器
-./oc.sh doctor      # 运行诊断检查
-./oc.sh backup      # 备份 data/ 目录为 tar.gz
-./oc.sh shell       # 进入容器 Shell
+./install.sh uninstall
 ```
 
-## 频道管理
-
-### 添加 Telegram
+连数据一起删除：
 
 ```bash
-./oc.sh channel add --channel telegram --token "你的BOT_TOKEN"
-./oc.sh restart
+./install.sh uninstall --with-data
 ```
 
-### 添加 Slack
-
-需要两个 Token，在 https://api.slack.com/apps 创建 App 后获取：
+彻底卸载（删除容器 + 数据 + 镜像 + web 本地依赖缓存）：
 
 ```bash
-./oc.sh channel add --channel slack --token "xoxb-xxx" --app-token "xapp-xxx"
-./oc.sh restart
+./install.sh uninstall --all
 ```
 
-### 添加 Discord
+---
 
-在 https://discord.com/developers/applications 创建 Application 后获取 Bot Token：
-
-```bash
-./oc.sh channel add --channel discord --token "你的DISCORD_TOKEN"
-./oc.sh restart
-```
-
-## 切换 AI 供应商
-
-编辑 `.env` 文件，注释掉当前的 Key，填入新的即可：
+## OpenClaw 常用命令
 
 ```bash
-# OPENAI_API_KEY=sk-proj-旧Key
-ANTHROPIC_API_KEY=sk-ant-新Key
-```
-
-然后重启：
-
-```bash
-./oc.sh restart
-```
-
-也可以通过 Control UI (http://127.0.0.1:18789/) 在线修改。
-
-## 数据与备份
-
-所有数据存储在 `./data/` 目录下，包括：
-
-- `openclaw-config/` — 配置文件、SQLite 记忆数据库、API Key
-- `workspace/` — Agent 创建和使用的文件
-
-一键备份：
-
-```bash
-./oc.sh backup
-# 生成: openclaw-backup-20260211-143000.tar.gz
-```
-
-恢复备份：
-
-```bash
-tar -xzf openclaw-backup-20260211-143000.tar.gz
 ./oc.sh start
+./oc.sh stop
+./oc.sh restart
+./oc.sh status
+./oc.sh logs
+./oc.sh update
+./oc.sh doctor
+./oc.sh backup
 ```
 
-## 安全提醒
+频道示例：
 
-- `.env` 包含 API Key 和 Token，已在 `.gitignore` 中排除，请勿手动提交
-- Gateway 端口仅绑定到 `127.0.0.1`，不会暴露到公网
-- 如需远程访问，请使用 SSH 隧道而非开放端口
-- 定期运行 `./oc.sh doctor` 检查配置安全性
+```bash
+./oc.sh channel add --channel telegram --token "$TELEGRAM_BOT_TOKEN"
+./oc.sh channel add --channel discord --token "$DISCORD_BOT_TOKEN"
+./oc.sh channel add --channel slack --token "$SLACK_BOT_TOKEN" --app-token "$SLACK_APP_TOKEN"
+```
+
+---
+
+## 常见问题
+
+### `unauthorized: gateway token missing`
+
+请使用带 token 的地址进入：
+
+```text
+http://127.0.0.1:<OPENCLAW_GATEWAY_PORT>/#token=<OPENCLAW_GATEWAY_TOKEN>
+```
+
+### `disconnected (1008): pairing required`
+
+在管理面板点「修复配对」，然后刷新控制台。
+
+### `bind: address already in use`
+
+先查端口占用：
+
+```bash
+lsof -nP -iTCP:18789 -sTCP:LISTEN
+```
+
+再停止冲突进程或改 `.env` 里的端口。
+
+---
+
+## 数据与安全
+
+- 运行数据在 `./data/`
+- `.env` 已在 `.gitignore` 中忽略，不要提交密钥
+- 服务默认监听本地回环地址
+
+---
+
+## 项目结构
+
+```text
+openclaw-docker/
+├── .env.example          # 环境变量模板
+├── docker-compose.yml    # 仅 OpenClaw 容器（gateway + cli）
+├── install.sh            # 本地管理面板启动脚本
+├── oc.sh                 # OpenClaw 日常管理脚本
+├── web/                  # 管理面板与静态场景页
+└── data/                 # 持久化数据
+```

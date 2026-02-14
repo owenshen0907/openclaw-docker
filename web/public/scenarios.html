@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw 场景手册</title>
+  <style>
+    :root {
+      --bg: #f3f7f8;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-strong: #ffffff;
+      --border: rgba(15, 94, 92, 0.2);
+      --text: #15343a;
+      --text-muted: #4c6a70;
+      --primary: #0f766e;
+      --primary-strong: #0b5f5a;
+      --accent: #f59e0b;
+      --ok: #16a34a;
+      --shadow: 0 18px 40px rgba(14, 64, 69, 0.12);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Avenir Next", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(15, 118, 110, 0.22), transparent 36%),
+        radial-gradient(circle at 88% 8%, rgba(245, 158, 11, 0.2), transparent 36%),
+        linear-gradient(160deg, #f7fbfc 0%, #eef5f5 44%, #f7fbfd 100%);
+      padding: 36px 18px;
+    }
+
+    .shell {
+      width: min(1080px, 100%);
+      margin: 0 auto;
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 30px 26px 24px;
+      border-bottom: 1px solid var(--border);
+      background:
+        linear-gradient(120deg, rgba(15, 118, 110, 0.13), transparent 52%),
+        linear-gradient(220deg, rgba(245, 158, 11, 0.15), transparent 54%);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(26px, 4vw, 38px);
+      line-height: 1.15;
+      letter-spacing: 0.3px;
+    }
+
+    .hero p {
+      margin: 12px 0 0;
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 740px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary-strong);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(15, 118, 110, 0.24);
+    }
+
+    .layout {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .tabs {
+      padding: 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel-strong);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      all: unset;
+      cursor: pointer;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+      display: block;
+    }
+
+    .tab-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(15, 118, 110, 0.3);
+      background: rgba(15, 118, 110, 0.06);
+    }
+
+    .tab-btn.active {
+      border-color: rgba(15, 118, 110, 0.35);
+      background: linear-gradient(125deg, rgba(15, 118, 110, 0.13), rgba(15, 118, 110, 0.05));
+    }
+
+    .tab-title {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .tab-subtitle {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .panel {
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel-strong);
+      min-height: 520px;
+      animation: fade 0.22s ease;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: clamp(20px, 3.2vw, 28px);
+      line-height: 1.2;
+    }
+
+    .panel p {
+      margin: 10px 0 0;
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .grid {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .block {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fbfdfd;
+      padding: 12px;
+    }
+
+    .block h3 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--primary-strong);
+    }
+
+    .block ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      line-height: 1.65;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .cmd-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cmd {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(11, 95, 90, 0.22);
+      background: linear-gradient(120deg, rgba(15, 118, 110, 0.08), rgba(15, 118, 110, 0.03));
+    }
+
+    .cmd code {
+      font-family: "SF Mono", "JetBrains Mono", "Fira Code", "Consolas", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #0a4348;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      border: 1px solid rgba(11, 95, 90, 0.24);
+      background: rgba(255, 255, 255, 0.94);
+      color: #0a4f54;
+      border-radius: 9px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.14s ease, transform 0.14s ease;
+    }
+
+    .copy-btn:hover {
+      background: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .tips {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(245, 158, 11, 0.36);
+      background: linear-gradient(120deg, rgba(245, 158, 11, 0.14), rgba(245, 158, 11, 0.04));
+    }
+
+    .tips h3 {
+      margin: 0;
+      font-size: 14px;
+      color: #8d5d04;
+    }
+
+    .tips ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      line-height: 1.65;
+      font-size: 13px;
+      color: #734f06;
+    }
+
+    .footer {
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(15, 118, 110, 0.25);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      line-height: 1.6;
+    }
+
+    .footer a {
+      color: var(--primary-strong);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    @media (max-width: 920px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .panel {
+        min-height: 0;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 18px 10px; }
+      .hero { padding: 22px 18px 18px; }
+      .layout { padding: 10px; }
+      .panel { padding: 16px; }
+      .cmd {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .copy-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <h1>OpenClaw 场景手册</h1>
+      <p>
+        面向新手的实战说明页。先选你的使用场景，再照着步骤做就行。
+        如果你是“工作电脑用 Docker、个人电脑直装”这类混合方式，这里也给了建议路径。
+      </p>
+      <div class="chips">
+        <span class="chip">工作电脑</span>
+        <span class="chip">个人电脑</span>
+        <span class="chip">频道接入</span>
+        <span class="chip">升级回滚</span>
+        <span class="chip">故障排查</span>
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="tabs" id="sceneTabs"></aside>
+      <article class="panel" id="scenePanel"></article>
+    </section>
+  </main>
+
+  <script>
+    const scenes = [
+      {
+        id: 'work-docker',
+        title: '工作电脑: Docker 隔离部署',
+        subtitle: '推荐给公司设备 / 有权限边界的环境',
+        summary: '主打“可控、隔离、易回滚”。不污染系统环境，更新也只动容器。',
+        fit: [
+          '公司电脑权限受限，不希望直接改系统依赖',
+          '希望配置和工作区可备份、可迁移',
+          '项目之间要快速切换，减少本地冲突'
+        ],
+        steps: [
+          '准备 API Key 并写入 .env',
+          '运行 install.sh 启动管理面板',
+          '在面板点“首次安装”，等待 Gateway 就绪',
+          '通过“带 token”入口打开 OpenClaw 控制台'
+        ],
+        commands: [
+          'cp .env.example .env',
+          'chmod +x install.sh oc.sh',
+          './install.sh',
+          './oc.sh status'
+        ],
+        tips: [
+          '端口冲突时改 .env 里的 OPENCLAW_GATEWAY_PORT',
+          '镜像升级后旧镜像可用 docker image prune 清理',
+          '生产/办公环境建议只绑定 127.0.0.1'
+        ]
+      },
+      {
+        id: 'personal-native',
+        title: '个人电脑: 直装版全功能控制',
+        subtitle: '适合你需要完整本机能力时',
+        summary: '你提到个人机要更完整操控电脑，这类需求更适合直装版。Docker 版偏隔离，直装版更贴近宿主机能力。',
+        fit: [
+          '你愿意在个人机维护本地运行环境',
+          '需要更深的系统级交互能力',
+          '能接受升级时自己处理依赖变化'
+        ],
+        steps: [
+          '个人机使用 OpenClaw 官方直装流程',
+          '工作机继续保留本项目 Docker 版',
+          '两个环境分别使用不同 token / key / 工作目录',
+          '把高风险实验放个人机，稳定任务放工作机'
+        ],
+        commands: [
+          '# 工作机继续使用本项目',
+          './oc.sh backup',
+          'tar -tzf openclaw-backup-*.tar.gz | head -n 20'
+        ],
+        tips: [
+          '个人机建议单独账号运行，避免和日常环境混用',
+          '优先分离 API Key，降低泄漏影响面',
+          '先在工作机验证流程，再迁移到个人机直装'
+        ]
+      },
+      {
+        id: 'channel-ops',
+        title: '频道接入: Telegram / Slack / Discord',
+        subtitle: '从 0 到可收发消息',
+        summary: '先启用频道插件，再写入 token，最后配对设备。顺序错了最容易踩坑。',
+        fit: [
+          '你要把 OpenClaw 接进消息平台',
+          '想在团队或社群里可持续运行 bot',
+          '需要快速定位“schema unavailable / pairing required”'
+        ],
+        steps: [
+          '管理面板点“添加频道”并提交 token',
+          '再点“配对平台”或执行 pairing approve',
+          '出现 pairing required 时点“修复配对”',
+          '回到控制台刷新频道页面确认状态'
+        ],
+        commands: [
+          './oc.sh channel add --channel telegram --token "$TELEGRAM_BOT_TOKEN"',
+          './oc.sh channel add --channel discord --token "$DISCORD_BOT_TOKEN"',
+          './oc.sh pair telegram ABC123'
+        ],
+        tips: [
+          'Telegram 页面显示 schema unavailable，多数是插件没启用',
+          'Slack 需 bot token 和 app token 配套',
+          '每次改频道配置后都建议做一次 status 检查'
+        ]
+      },
+      {
+        id: 'upgrade-maintain',
+        title: '升级与维护: 少停机、可回滚',
+        subtitle: '适合长期稳定运行',
+        summary: '用“拉新镜像 + 重建容器”更新，配置和数据都在 data 目录，不会随容器丢失。',
+        fit: [
+          '你要周期性升级镜像',
+          '想把故障恢复时间压短',
+          '希望升级前后都可验证健康状态'
+        ],
+        steps: [
+          '升级前先 backup',
+          '更新 .env 里的 OPENCLAW_IMAGE（可选）',
+          '执行 update 或在面板点“更新镜像”',
+          '通过 status + logs 验证运行情况'
+        ],
+        commands: [
+          './oc.sh backup',
+          './oc.sh update',
+          './oc.sh status',
+          './oc.sh logs'
+        ],
+        tips: [
+          '升级前保留最近一次可用备份包',
+          '回滚时优先回镜像 tag，再恢复 data',
+          '使用固定 tag 比 latest 更可控'
+        ]
+      },
+      {
+        id: 'troubleshoot',
+        title: '故障快排: 新手三板斧',
+        subtitle: '先判断是端口、令牌还是配对',
+        summary: '80% 问题可用三个检查解决: 端口占用、token 入口、配对状态。',
+        fit: [
+          '安装时报 address already in use',
+          '控制台提示 gateway token missing',
+          'Chat 提示 pairing required'
+        ],
+        steps: [
+          '先看 status 和 logs，确认容器是否运行',
+          '确认浏览器是否用“带 token”地址进入',
+          '必要时执行修复配对并刷新控制台',
+          '如果仍失败，再做 doctor 诊断'
+        ],
+        commands: [
+          'lsof -nP -iTCP:18789 -sTCP:LISTEN',
+          './oc.sh status',
+          './oc.sh doctor'
+        ],
+        tips: [
+          '错误信息先保留原文，再做下一步判断',
+          '先处理“无法连接”再处理“频道配置”',
+          '同一时间只改一个变量，避免干扰排障'
+        ]
+      }
+    ];
+
+    const tabsEl = document.getElementById('sceneTabs');
+    const panelEl = document.getElementById('scenePanel');
+    let active = scenes[0].id;
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderTabs() {
+      tabsEl.innerHTML = scenes.map((scene) => `
+        <button class="tab-btn ${scene.id === active ? 'active' : ''}" data-scene="${scene.id}">
+          <p class="tab-title">${escapeHtml(scene.title)}</p>
+          <p class="tab-subtitle">${escapeHtml(scene.subtitle)}</p>
+        </button>
+      `).join('');
+    }
+
+    function listToHtml(items) {
+      return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+    }
+
+    function renderPanel() {
+      const scene = scenes.find((item) => item.id === active);
+      if (!scene) return;
+
+      panelEl.innerHTML = `
+        <h2>${escapeHtml(scene.title)}</h2>
+        <p>${escapeHtml(scene.summary)}</p>
+
+        <div class="grid">
+          <section class="block">
+            <h3>适用人群</h3>
+            ${listToHtml(scene.fit)}
+          </section>
+          <section class="block">
+            <h3>推荐步骤</h3>
+            ${listToHtml(scene.steps)}
+          </section>
+        </div>
+
+        <section class="cmd-list">
+          ${scene.commands.map((command) => `
+            <div class="cmd">
+              <code>${escapeHtml(command)}</code>
+              <button class="copy-btn" data-copy="${encodeURIComponent(command)}">复制命令</button>
+            </div>
+          `).join('')}
+        </section>
+
+        <section class="tips">
+          <h3>避坑提醒</h3>
+          ${listToHtml(scene.tips)}
+        </section>
+
+        <footer class="footer">
+          <span>入口: <a href="/" target="_blank" rel="noopener">管理面板</a></span>
+          <span>推荐: 使用“带 token”地址进入控制台</span>
+          <span>提示: 本页是静态文件，可直接按你的习惯改版</span>
+        </footer>
+      `;
+    }
+
+    async function copyText(raw) {
+      try {
+        await navigator.clipboard.writeText(raw);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    document.addEventListener('click', async (event) => {
+      const tabBtn = event.target.closest('.tab-btn');
+      if (tabBtn) {
+        active = tabBtn.dataset.scene;
+        renderTabs();
+        renderPanel();
+        return;
+      }
+
+      const copyBtn = event.target.closest('.copy-btn');
+      if (copyBtn) {
+        const command = decodeURIComponent(copyBtn.dataset.copy || '');
+        const ok = await copyText(command);
+        const original = copyBtn.textContent;
+        copyBtn.textContent = ok ? '已复制' : '复制失败';
+        setTimeout(() => {
+          copyBtn.textContent = original;
+        }, 1200);
+      }
+    });
+
+    renderTabs();
+    renderPanel();
+  </script>
+</body>
+</html>
